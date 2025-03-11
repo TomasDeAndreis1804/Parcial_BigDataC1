@@ -47,8 +47,6 @@ def extract_data(html_content):
         bathrooms_tag = card.find("p", {"data-test": "bathrooms"})
         # Extraer el valor del atributo content si existe, de lo contrario, poner None
         bathrooms = bathrooms_tag["content"] if bathrooms_tag and bathrooms_tag.has_attr("content") else None
-
-
         # Extraer área en metros cuadrados
         floor_area_raw = card.get("data-floorarea", "N/A")
         floor_area = extract_number(floor_area_raw)
@@ -97,4 +95,3 @@ def app(event, context):
                 return {
                     "statusCode": 400,
                     "body": "No se encontraron datos en el HTML."}
-
