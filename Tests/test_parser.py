@@ -90,5 +90,5 @@ def test_extract_data(s3_mock, monkeypatch):
     print("Contenido real:", repr(content))
     print("Contenido esperado:", repr(expected_content))
     assert content.strip() == expected_content.strip(), (
-        f"El contenido no coincide:\nReal: {repr(content)}\nEsperado: {repr(expected_content)}"
- 
+        f"El contenido no coincide:\nReal: {repr(content)}\nEsperado: {repr(expected_content)}")
+
