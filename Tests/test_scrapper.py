@@ -1,7 +1,7 @@
 import datetime
 import unittest
 from unittest.mock import patch, MagicMock
-from Scrapper.scrapper import app
+from Scrapping.scrapper import app
 
 
 class TestScrapperApp(unittest.TestCase):
