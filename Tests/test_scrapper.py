@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from Scrapper.scrapper import app
 
+
 class TestScrapperApp(unittest.TestCase):
     @patch('scrapper.s3_client')
     @patch('scrapper.requests.get')
@@ -33,6 +34,7 @@ class TestScrapperApp(unittest.TestCase):
         # Verificar la respuesta de la función.
         self.assertEqual(result["statusCode"], 200)
         self.assertIn("s3://bucket-parcial1-1/2025-03-11.html", result["body"])
+
 
 if __name__ == "__main__":
     unittest.main()
