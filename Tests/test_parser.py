@@ -5,7 +5,7 @@ import boto3
 from moto import mock_s3
 
 
-# HTML de prueba con cuatro propiedades
+
 HTML_TEST = """
 <html>
 <body>
@@ -34,8 +34,8 @@ HTML_TEST = """
 def s3_mock():
     with mock_s3():
         s3 = boto3.client("s3", region_name="us-east-1")
-        bucket = "primerparcialbucketcsvs"
-        s3.create_bucket(Bucket=bucket)
+        # Usamos el bucket definido en el código (DESTINATION_BUCKET)
+        s3.create_bucket(Bucket=DESTINATION_BUCKET)
         yield s3
 
 
@@ -78,15 +78,19 @@ def test_extract_data(s3_mock, monkeypatch):
     print("assert 1 passed: extract_data devuelve los datos esperados.")
 
     # 2. Prueba de save_to_s3
-    monkeypatch.setattr("parser.s3_client", s3_mock)
+    # Se monkeypatchea el cliente S3 global definido en Parser.parser
+    monkeypatch.setattr("Parser.parser.s3_client", s3_mock)
     filename = "test_file.csv"
     save_to_s3(data, filename)
     response = s3_mock.get_object(Bucket=DESTINATION_BUCKET, Key=filename)
     raw_content = response["Body"].read().decode("utf-8")
     content = decode_chunked(raw_content)
     header = "FechaDescarga,Barrio,Valor,NumHabitaciones,NumBanos,mts2"
-    expected_content = header + "\n" + "\n".join([",".join(map(str, row)) for row in data])
+    expected_content = header + "\n" + "\n".join(
+        [",".join(map(str, row)) for row in data]
+    )
     print("Contenido real:", repr(content))
     print("Contenido esperado:", repr(expected_content))
     assert content.strip() == expected_content.strip(), (
-        f"El contenido no coincide:\nReal: {repr(content)}\nEsperado: {repr(expected_content)}")
+        f"El contenido no coincide:\nReal: {repr(content)}\nEsperado: {repr(expected_content)}"
+    )
