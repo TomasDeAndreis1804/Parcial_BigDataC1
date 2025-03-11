@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from Scrapper.scrapper import app
 
+
 @pytest.fixture
 def mock_s3():
     """Mock del cliente S3."""
