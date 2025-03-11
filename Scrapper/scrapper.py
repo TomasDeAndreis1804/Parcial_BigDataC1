@@ -3,7 +3,7 @@ import boto3
 import datetime
 
 BUCKET_NAME = "bucket-parcial1-1"
-BASE_URL = "https://casas.mitula.com.co/find?operationType=sell&propertyType=mitula_studio_apartment&text=Bogot%C3%A1"
+BASE_URL = "https://casas.mitula.com.co/find?operationType=sell&propertyType=mitula_studio_apartment&geoId=mitula-CO-poblacion-0000014156&text=Bogotá%2C++%28Cundinamarca%29"
 
 s3_client = boto3.client("s3")
 
