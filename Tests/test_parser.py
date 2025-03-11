@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import patch, MagicMock
 from Parsing.parser import clean_price
 from Scrapping.scrapper import app
-import boto3
 
 
 class TestScraperParser(unittest.TestCase):
