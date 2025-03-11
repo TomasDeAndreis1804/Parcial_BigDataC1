@@ -1,49 +1,38 @@
-import pytest
+import datetime
+import unittest
 from unittest.mock import patch, MagicMock
 from Scrapper.scrapper import app
 
+class TestScrapperApp(unittest.TestCase):
+    @patch('scrapper.s3_client')
+    @patch('scrapper.requests.get')
+    @patch('scrapper.datetime.datetime.utcnow', return_value=datetime.datetime(2025, 3, 11))
+    def test_app(self, mock_utcnow, mock_requests_get, mock_s3_client):
+        # Configuramos el mock de requests.get para que siempre retorne una respuesta exitosa.
+        fake_response = MagicMock()
+        fake_response.status_code = 200
+        fake_response.text = "Contenido de prueba"
+        mock_requests_get.return_value = fake_response
 
-@pytest.fixture
-def mock_s3():
-    """Mock del cliente S3."""
-    with patch("boto3.client") as mock:
-        mock_s3_instance = MagicMock()
-        mock.return_value = mock_s3_instance
-        mock_s3_instance.put_object.return_value = {}  # Simula respuesta de S3
-        yield mock_s3_instance
+        # Ejecutar la función app con event y context dummy
+        event = {}   # No se utiliza dentro de la función
+        context = None
+        result = app(event, context)
 
+        # Se espera que se hayan consultado 10 páginas, concatenando el contenido de cada una.
+        expected_html = ("Contenido de prueba\n\n") * 10
 
-@patch("requests.get")
-def test_app(mock_requests, mock_s3):
-    """Prueba que app descarga y sube el archivo a S3 correctamente."""
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.text = "<html><body>Mock Page</body></html>"
-    mock_requests.return_value = mock_response
+        # Verificar que se llamó a s3_client.put_object con los parámetros correctos.
+        mock_s3_client.put_object.assert_called_once_with(
+            Bucket="bucket-parcial1-1",
+            Key="2025-03-11.html",
+            Body=expected_html.encode("utf-8"),
+            ContentType="text/html"
+        )
 
-    # Simular respuesta de S3 para evitar errores de archivo no encontrado
-    mock_s3.get_object.return_value = {
-        "Body": MagicMock(read=MagicMock(return_value=b"<html><body>Mock Page</body></html>"))
-    }
+        # Verificar la respuesta de la función.
+        self.assertEqual(result["statusCode"], 200)
+        self.assertIn("s3://bucket-parcial1-1/2025-03-11.html", result["body"])
 
-    # Evento S3 simulado con un archivo válido
-    mock_event = {
-        "Records": [{
-            "s3": {
-                "bucket": {"name": "bucket-parcial1-1"},
-                "object": {"key": "mock-file.html"}
-            }
-        }]
-    }
-    mock_context = {}
-
-    response = app(mock_event, mock_context)
-
-    assert response["statusCode"] == 200
-    assert "Archivo guardado en s3" in response["body"]
-
-    # Depurar si put_object no se llama
-    if mock_s3.put_object.call_count == 0:
-        print("⚠ ERROR: La función app() no llamó a put_object(). Verifica si hay errores previos en la ejecución.")
-
-    mock_s3.put_object.assert_called_once()
+if __name__ == "__main__":
+    unittest.main()
