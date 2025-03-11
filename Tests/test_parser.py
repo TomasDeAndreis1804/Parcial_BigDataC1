@@ -1,4 +1,5 @@
 import pytest
+import datetime
 from Parser.parser import extract_data
 
 
@@ -20,5 +21,7 @@ def sample_html():
 def test_extract_data(sample_html):
     """Prueba que extract_data extrae correctamente la información esperada."""
     data = extract_data(sample_html)
-    expected = [["2025-03-10", "Bogotá", "1200000", "2", "1", "50"]]
+    today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    expected = [[today, "Bogotá", "1200000", "2", "1", "50"]]  # floor_area como string
+
     assert data == expected
