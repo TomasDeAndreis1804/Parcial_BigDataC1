@@ -2,14 +2,15 @@ import requests
 import boto3
 import datetime
 
+
 BUCKET_NAME = "bucket-parcial1-1"
-BASE_URL = "https://casas.mitula.com.co/find?operationType=sell&propertyType=mitula_studio_apartment&geoId=mitula-CO-poblacion-0000014156&text=Bogotá%2C++%28Cundinamarca%29"
+BASE_URL = "https://casas.mitula.com.co/find?operationType=sell&propertyType=mitula_studio_apartment&geoId=mitula-CO-poblacion-0000014156&text=Bogot\u00e1%2C++%28Cundinamarca%29"
 
 s3_client = boto3.client("s3")
 
+
 def app(event, context):
     today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
-    filename = f"{today}.html"
     s3_path = f"{today}.html"
 
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -31,4 +32,5 @@ def app(event, context):
 
     return {
         "statusCode": 200,
-        "body": f"Archivo guardado en s3://{BUCKET_NAME}/{s3_path}"}
+        "body": f"Archivo guardado en s3://{BUCKET_NAME}/{s3_path}"
+    }
