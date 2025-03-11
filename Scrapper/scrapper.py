@@ -31,5 +31,4 @@ def app(event, context):
 
     return {
         "statusCode": 200,
-        "body": f"Archivo guardado en s3://{BUCKET_NAME}/{s3_path}"
-    }
+        "body": f"Archivo guardado en s3://{BUCKET_NAME}/{s3_path}"}
