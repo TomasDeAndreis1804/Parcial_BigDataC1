@@ -18,7 +18,7 @@ class TestScraperParser(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.text = "<html><body>Test</body></html>"
         mock_get.return_value = mock_response
-        
+
         result = app({}, {})  # Simula la ejecución de la función Lambda
         self.assertIsNotNone(result)
 
@@ -28,10 +28,10 @@ class TestScraperParser(unittest.TestCase):
         mock_s3 = MagicMock()
         mock_boto3.return_value = mock_s3
         mock_s3.upload_file.return_value = None  # Simula éxito
-        
+
         # Simular archivo y bucket para la subida
         mock_s3.upload_file("test_file", "test_bucket", "test_path")
-        
+
         # Aseguramos que upload_file fue llamado
         mock_s3.upload_file.assert_called_with("test_file", "test_bucket", "test_path")
         self.assertTrue(mock_s3.upload_file.called)
