@@ -96,3 +96,4 @@ def app(event, context):
                     "statusCode": 400,
                     "body": "No se encontraron datos en el HTML."
                 }
+                
