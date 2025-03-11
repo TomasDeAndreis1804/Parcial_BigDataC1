@@ -3,10 +3,12 @@ import boto3
 from bs4 import BeautifulSoup
 import re
 
+
 # Configuración de S3
 s3_client = boto3.client("s3")
 SOURCE_BUCKET = "primerparcialbucketurls"
 DESTINATION_BUCKET = "primerparcialbucketcsvs"
+
 
 def clean_price(price):
     """Limpia y convierte el precio en un string numérico sin comas ni símbolos."""
@@ -15,6 +17,7 @@ def clean_price(price):
     if price and isinstance(price, str):
         return "".join(filter(str.isdigit, price))  # Extrae solo los números
     return "N/A"
+
 
 def extract_number(value):
     """Extrae solo números de un string y los devuelve como un entero, o None si no hay números."""
@@ -39,13 +42,10 @@ def extract_data(html_content):
 
         # Extraer número de habitaciones y baños
         bedrooms_tag = card.find("p", {"data-test": "bedrooms"})
-        # Extraer el valor del atributo content si existe, de lo contrario, poner None
         bedrooms = bedrooms_tag["content"] if bedrooms_tag and bedrooms_tag.has_attr("content") else None
 
         bathrooms_tag = card.find("p", {"data-test": "bathrooms"})
-        # Extraer el valor del atributo content si existe, de lo contrario, poner None
         bathrooms = bathrooms_tag["content"] if bathrooms_tag and bathrooms_tag.has_attr("content") else None
-
 
         # Extraer área en metros cuadrados
         floor_area_raw = card.get("data-floorarea", "N/A")
@@ -55,10 +55,11 @@ def extract_data(html_content):
 
     return registros
 
+
 def save_to_s3(data, filename):
     """Guarda los datos extraídos en un CSV y lo sube a S3."""
     header = "FechaDescarga,Barrio,Valor,NumHabitaciones,NumBanos,mts2"
-    csv_content = header + "\n" + "\n".join([",".join(map(str, row)) for row in data])
+    csv_content = header + "\n" + "\n".join([" ,".join(map(str, row)) for row in data])
 
     s3_client.put_object(
         Bucket=DESTINATION_BUCKET,
@@ -67,6 +68,7 @@ def save_to_s3(data, filename):
         ContentType="text/csv"
     )
     print(f"Archivo {filename} guardado en S3 en el bucket {DESTINATION_BUCKET}.")
+
 
 def app(event, context):
     """Maneja la ejecución del Lambda cuando se sube un archivo HTML a S3."""
@@ -92,4 +94,5 @@ def app(event, context):
             else:
                 return {
                     "statusCode": 400,
-                    "body": "No se encontraron datos en el HTML."}
+                    "body": "No se encontraron datos en el HTML."
+                }
