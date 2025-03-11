@@ -1,23 +1,27 @@
 import pytest
-from Scrapper.scrapper import extract_data  # Importación correcta de la función
+from unittest.mock import patch, MagicMock
+from Scrapper.scrapper import app
 
 @pytest.fixture
-def sample_html():
-    """HTML de prueba con datos de un apartamento."""
-    return """
-    <html>
-        <body>
-            <a class="listing listing-card" data-location="Bogotá"
-                data-price="1200000" data-rooms="2" data-bathrooms="1" 
-                data-floorarea="50">
-            </a>
-        </body>
-    </html>
-    """
+def mock_s3():
+    """Simula el cliente de S3."""
+    with patch("boto3.client") as mock:
+        mock_s3_instance = MagicMock()
+        mock.return_value = mock_s3_instance
+        yield mock_s3_instance
 
+@patch("requests.get")
+def test_scrapper(mock_requests, mock_s3):
+    """Prueba que el scrapper guarde correctamente los datos en S3."""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.text = "<html><body>Mock Page</body></html>"
+    mock_requests.return_value = mock_response
 
-def test_extract_data(sample_html):
-    """Prueba que extract_data extrae correctamente la información esperada."""
-    data = extract_data(sample_html)
-    expected = [["2025-03-10", "Bogotá", "1200000", "2", "1", "50"]]
-    assert data == expected
+    event = {}
+    context = {}
+
+    response = app(event, context)
+
+    assert response["statusCode"] == 200
+    mock_s3.put_object.assert_called_once()
