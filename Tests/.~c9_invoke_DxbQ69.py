@@ -34,5 +34,6 @@ class TestScraperParser(unittest.TestCase):
         app({}, {})  # Simulate function execution
         mock_s3.upload_file.assert_called()
 
+
 if __name__ == "__main__":
     unittest.main()
