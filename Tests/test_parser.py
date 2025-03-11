@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from Parsing.parser import clean_price
 from Scrapping.scrapper import app
+import boto3
 
 
 class TestScraperParser(unittest.TestCase):
@@ -19,8 +20,13 @@ class TestScraperParser(unittest.TestCase):
         mock_response.text = "<html><body>Test</body></html>"
         mock_get.return_value = mock_response
 
-        result = app({}, {})  # Simula la ejecución de la función Lambda
-        self.assertIsNotNone(result)
+        with patch("boto3.client") as mock_boto3:
+            mock_s3 = MagicMock()
+            mock_boto3.return_value = mock_s3
+            mock_s3.put_object.return_value = None  # Simula éxito
+            
+            result = app({}, {})  # Simula la ejecución de la función Lambda
+            self.assertIsNotNone(result)
 
     @patch("boto3.client")
     def test_s3_upload(self, mock_boto3):
@@ -28,10 +34,10 @@ class TestScraperParser(unittest.TestCase):
         mock_s3 = MagicMock()
         mock_boto3.return_value = mock_s3
         mock_s3.upload_file.return_value = None  # Simula éxito
-
+        
         # Simular archivo y bucket para la subida
         mock_s3.upload_file("test_file", "test_bucket", "test_path")
-
+        
         # Aseguramos que upload_file fue llamado
         mock_s3.upload_file.assert_called_with("test_file", "test_bucket", "test_path")
         self.assertTrue(mock_s3.upload_file.called)
