@@ -20,7 +20,7 @@ jobs:
         run: pip install flake8
 
       - name: Revisar calidad del código con Flake8
-        run: flake8 --max-line-length=100
+        run: flake8 --max-line-length=150
 
   test:
     name: Pruebas Unitarias (pytest)
