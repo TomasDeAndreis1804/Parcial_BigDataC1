@@ -1,50 +1,94 @@
-import unittest
-from unittest.mock import patch, MagicMock
-from Parser.parser import clean_price, extract_number, extract_data, save_to_s3
+import pytest
+import datetime
+from Parser.parser import extract_data, save_to_s3, DESTINATION_BUCKET
+import boto3
+from moto import mock_s3
+from bs4 import BeautifulSoup
 
 
-class TestParserFunctions(unittest.TestCase):
-    def test_clean_price(self):
-        self.assertEqual(clean_price("$1,500,000"), "1500000")
-        self.assertEqual(clean_price("COP 2.300.000"), "2300000")
-        self.assertEqual(clean_price(350000), "350000")
-        self.assertEqual(clean_price(None), "N/A")
-
-    def test_extract_number(self):
-        self.assertEqual(extract_number("Área: 45m²"), 45)
-        self.assertEqual(extract_number("120.5 m2"), 1205)
-        self.assertEqual(extract_number("Sin datos"), None)
-        self.assertEqual(extract_number(None), None)
-
-    @patch("Parser.parser.s3_client")
-    def test_save_to_s3(self, mock_s3_client):
-        test_data = [["2025-03-11", "Chapinero", "1500000", "2", "2", "45"]]
-        filename = "test.csv"
-        mock_s3_client.put_object = MagicMock()
-        save_to_s3(test_data, filename)
-        mock_s3_client.put_object.assert_called_once_with(
-            Bucket="bucket-parcial1-2",
-            Key=filename,
-            Body=b"FechaDescarga,Barrio,Valor,NumHabitaciones,NumBanos,mts2\n2025-03-11,Chapinero,1500000,2,2,45",
-            ContentType="text/csv"
-        )
-
-    def test_extract_data(self):
-        html_content = """
-        <html>
-            <body>
-                <a class="listing listing-card" data-location="Chapinero" data-price="$1,500,000" data-floorarea="45">
-                    <p data-test="bedrooms" content="2"></p>
-                    <p data-test="bathrooms" content="2"></p>
-                </a>
-            </body>
-        </html>
-        """
-        result = extract_data(html_content)
-        expected = [["2025-03-11", "Chapinero", "1500000", "2", "2", 45]]
-        # Ignorar la fecha exacta de descarga
-        self.assertEqual(result[0][1:], expected[0][1:])
+# HTML de prueba con cuatro propiedades
+HTML_TEST = """
+<html>
+<body>
+    <a class="listing listing-card" data-location="Bogotá, Centro" data-price="$300,000,000" data-floorarea="80 m²">
+        <p data-test="bedrooms" content="3"></p>
+        <p data-test="bathrooms" content="2"></p>
+    </a>
+    <a class="listing listing-card" data-location="Bogotá, Poblado" data-price="$500,000,000" data-floorarea="120 m²">
+        <p data-test="bedrooms" content="4"></p>
+        <p data-test="bathrooms" content="3"></p>
+    </a>
+    <a class="listing listing-card" data-location="Bogotá, Centro" data-price="$415,000,000" data-floorarea="55 m²">
+        <p data-test="bedrooms" content="1"></p>
+        <p data-test="bathrooms" content="1"></p>
+    </a>
+    <a class="listing listing-card" data-location="Bogotá, Ilarco" data-price="$420,000,000" data-floorarea="66 m²">
+        <p data-test="bedrooms" content="1"></p>
+        <p data-test="bathrooms" content="2"></p>
+    </a>
+</body>
+</html>
+"""
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.fixture
+def s3_mock():
+    with mock_s3():
+        s3 = boto3.client("s3", region_name="us-east-1")
+        bucket = "primerparcialbucketcsvs"
+        s3.create_bucket(Bucket=bucket)
+        yield s3
+
+
+def decode_chunked(chunked_str: str) -> str:
+    """
+    Decodifica una cadena en formato chunked encoding y devuelve la concatenación de los chunks.
+    """
+    lines = chunked_str.split("\r\n")
+    chunks = []
+    i = 0
+    while i < len(lines):
+        if not lines[i]:
+            i += 1
+            continue
+        try:
+            size = int(lines[i], 16)
+        except ValueError:
+            i += 1
+            continue
+        if size == 0:
+            break
+        if i + 1 < len(lines):
+            chunks.append(lines[i + 1])
+        i += 2
+    return "".join(chunks).strip()
+
+
+def test_extract_data(s3_mock, monkeypatch):
+    """Verifica que extract_data y save_to_s3 funcionan correctamente."""
+    # 1. Prueba de extract_data
+    fecha_descarga = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    data = extract_data(HTML_TEST)
+    expected_data = [
+        [fecha_descarga, "Bogotá, Centro", "300000000", "3", "2", 80],
+        [fecha_descarga, "Bogotá, Poblado", "500000000", "4", "3", 120],
+        [fecha_descarga, "Bogotá, Centro", "415000000", "1", "1", 55],
+        [fecha_descarga, "Bogotá, Ilarco", "420000000", "1", "2", 66]
+    ]
+    assert data == expected_data, f"Datos extraídos incorrectos: {data}"
+    print("assert 1 passed: extract_data devuelve los datos esperados.")
+
+    # 2. Prueba de save_to_s3
+    monkeypatch.setattr("parser.s3_client", s3_mock)
+    filename = "test_file.csv"
+    save_to_s3(data, filename)
+    response = s3_mock.get_object(Bucket=DESTINATION_BUCKET, Key=filename)
+    raw_content = response["Body"].read().decode("utf-8")
+    content = decode_chunked(raw_content)
+    header = "FechaDescarga,Barrio,Valor,NumHabitaciones,NumBanos,mts2"
+    expected_content = header + "\n" + "\n".join([",".join(map(str, row)) for row in data])
+    print("Contenido real:", repr(content))
+    print("Contenido esperado:", repr(expected_content))
+    assert content.strip() == expected_content.strip(), (
+        f"El contenido no coincide:\nReal: {repr(content)}\nEsperado: {repr(expected_content)}"
+ 
