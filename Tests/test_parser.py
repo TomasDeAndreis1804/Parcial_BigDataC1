@@ -9,7 +9,7 @@ def sample_html():
     <html>
         <body>
             <a class="listing listing-card" data-location="Bogotá"
-                data-price="1200000" data-rooms="2" data-bathrooms="1" 
+                data-price="1200000" data-rooms="2" data-bathrooms="1"
                 data-floorarea="50">
             </a>
         </body>
