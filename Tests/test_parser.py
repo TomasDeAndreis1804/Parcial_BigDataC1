@@ -3,7 +3,6 @@ import datetime
 from Parser.parser import extract_data, save_to_s3, DESTINATION_BUCKET
 import boto3
 from moto import mock_s3
-from bs4 import BeautifulSoup
 
 
 # HTML de prueba con cuatro propiedades
@@ -91,4 +90,3 @@ def test_extract_data(s3_mock, monkeypatch):
     print("Contenido esperado:", repr(expected_content))
     assert content.strip() == expected_content.strip(), (
         f"El contenido no coincide:\nReal: {repr(content)}\nEsperado: {repr(expected_content)}")
-
