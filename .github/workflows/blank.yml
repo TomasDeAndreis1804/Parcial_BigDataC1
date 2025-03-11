@@ -41,7 +41,8 @@ jobs:
           pip install pytest boto3 beautifulsoup4
 
       - name: Ejecutar pruebas con pytest
-        run: pytest Tests/
+        run: PYTHONPATH=$(pwd) pytest Tests/
+
 
   deploy:
     name: Despliegue en AWS con Zappa
