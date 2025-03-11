@@ -1,31 +1,23 @@
-import unittest
-from unittest.mock import patch, MagicMock
-import boto3
-from Scrapper.scrapper import app
+import json
+import pytest
+from unittest.mock import MagicMock
+from Scrapper.scrapper import extract_data  # Asegúrate de importar correctamente la función
 
-
-class TestScrapper(unittest.TestCase):
-
-    @patch("boto3.client")
-    def test_s3_download(self, mock_boto3_client):
-        """Simula la descarga de un archivo desde S3"""
-        mock_s3 = MagicMock()
-        mock_boto3_client.return_value = mock_s3
-
-        html_mock = """<html><body><a class='listing listing-card' data-location='Bogotá' 
-                       data-price='$1000000' data-rooms='3' data-bathrooms='2' 
-                       data-floorarea='50'></a></body></html>"""
-
-        mock_s3.get_object.return_value = {
-            "Body": MagicMock(read=lambda: html_mock.encode("utf-8"))  # ✅ Convertir a bytes
-        }
-
-        event = {
-            "Records": [{"s3": {"bucket": {"name": "bucket-parcial1-1"}, "object": {"key": "test.html"}}}]
-        }
-        response = app(event, None)
-        self.assertEqual(response["statusCode"], 200)
-
-
-if __name__ == "__main__":
-    unittest.main()
+@pytest.fixture
+def sample_html():
+    return """
+    <html>
+        <body>
+            <a class="listing listing-card" data-location="Bogotá"
+                data-price="1.200.000" data-rooms="2" data-bathrooms="1" 
+                data-floorarea="50">
+            </a>
+        </body>
+    </html>
+    """
+    
+def test_extract_data(sample_html):
+    """Prueba que extract_data extrae correctamente la información."""
+    data = extract_data(sample_html)
+    expected = [["2025-03-10", "Bogotá", "1200000", "2", "1", "50"]]
+    assert data == expected
