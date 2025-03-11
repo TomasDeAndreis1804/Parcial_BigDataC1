@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 import boto3
 from Scrapper.scrapper import app
 
+
 class TestScrapper(unittest.TestCase):
 
     @patch("boto3.client")
@@ -10,9 +11,13 @@ class TestScrapper(unittest.TestCase):
         """Simula la descarga de un archivo desde S3"""
         mock_s3 = MagicMock()
         mock_boto3_client.return_value = mock_s3
-        
+
+        html_mock = """<html><body><a class='listing listing-card' data-location='Bogotá' 
+                       data-price='$1000000' data-rooms='3' data-bathrooms='2' 
+                       data-floorarea='50'></a></body></html>"""
+
         mock_s3.get_object.return_value = {
-            "Body": MagicMock(read=lambda: b"<html><body><a class='listing listing-card' data-location='Bogotá' data-price='$1000000' data-rooms='3' data-bathrooms='2' data-floorarea='50'></a></body></html>")
+            "Body": MagicMock(read=lambda: html_mock.encode("utf-8"))  # ✅ Convertir a bytes
         }
 
         event = {
@@ -20,6 +25,7 @@ class TestScrapper(unittest.TestCase):
         }
         response = app(event, None)
         self.assertEqual(response["statusCode"], 200)
+
 
 if __name__ == "__main__":
     unittest.main()
