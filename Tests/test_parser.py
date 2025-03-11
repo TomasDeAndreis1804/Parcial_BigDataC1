@@ -1,6 +1,6 @@
 import pytest
 import datetime
-from Parser.parser import extract_data, save_to_s3, DESTINATION_BUCKET
+from parser.parser import extract_data, save_to_s3, DESTINATION_BUCKET
 import boto3
 from moto import mock_s3
 
