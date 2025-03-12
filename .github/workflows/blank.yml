@@ -9,15 +9,15 @@ on:
       - main
 
 jobs:
- # lint:
-  #  name: Código Limpio (Flake8)
-   # runs-on: ubuntu-latest
-    #steps:
-     # - name: Checkout del código
-      #  uses: actions/checkout@v3
+  lint:
+    name: Código Limpio (Flake8)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
 
-      #- name: Instalar dependencias
-       # run: pip install flake8
+      - name: Instalar dependencias
+        run: pip install flake8
 
       #- name: Revisar calidad del código con Flake8
        # run: flake8 --max-line-length=180
