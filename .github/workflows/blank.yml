@@ -94,7 +94,8 @@ jobs:
 
       - name: Deploy with Zappa
         run: |
-          source env/bin/activate  # Activar entorno virtual
+        
+          source venv/bin/activate  # Activar entorno virtual
           cd Parsing
           ls  # Verificar archivos dentro de Parsing
           
@@ -108,6 +109,6 @@ jobs:
       # 🔹 Paso 7: Verificar despliegue
       - name: Check Zappa Status
         run: |
-          source env/bin/activate  # Activarlo
+          source venv/bin/activate  # Activarlo
           cd Parsing
           zappa status dev_parser
