@@ -95,13 +95,13 @@ jobs:
       - name: Desplegar con Zappa
         run: |
           cd Parsing
-          if venv/bin/zappa status dev_parser || true; then
-            venv/bin/zappa update dev_parser
+          if env/bin/zappa status dev_parser || true; then
+            env/bin/zappa update dev_parser
           else
-            venv/bin/zappa deploy dev_parser
+            env/bin/zappa deploy dev_parser
           fi
 
       - name: Verificar estado del despliegue
         run: |
           cd Parsing
-          venv/bin/zappa status dev_parser
+          env/bin/zappa status dev_parser
