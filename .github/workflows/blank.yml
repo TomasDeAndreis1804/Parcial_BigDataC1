@@ -92,16 +92,22 @@ jobs:
       - name: Verificar conexión con AWS S3
         run: venv/bin/aws s3 ls
 
-      - name: Desplegar con Zappa
+      - name: Deploy with Zappa
         run: |
+          source env/bin/activate  # Activar entorno virtual
           cd Parsing
-          if ../env/bin/zappa status dev_parser || true; then
-            ../env/bin/zappa update dev_parser
+          ls  # Verificar archivos dentro de Parsing
+          
+          if zappa status dev_parser || true; then
+            zappa update dev_parser
           else
-            ../env/bin/zappa deploy dev_parser
+            zappa deploy dev_parser
           fi
+        
 
-      - name: Verificar estado del despliegue
+      # 🔹 Paso 7: Verificar despliegue
+      - name: Check Zappa Status
         run: |
+          source env/bin/activate  # Activarlo
           cd Parsing
-          ../env/bin/zappa status dev_parser
+          zappa status dev_parser
