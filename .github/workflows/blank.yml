@@ -43,8 +43,14 @@ jobs:
           venv/bin/pip install -r requirements.txt
           venv/bin/pip install pytest boto3 beautifulsoup4 "moto<5.0" awscli zappa
 
+      - name: Configurar PYTHONPATH
+        run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+
+      - name: Verificar estructura de archivos
+        run: ls -R
+
       - name: Ejecutar pruebas con pytest
-        run: venv/bin/pytest
+        run: venv/bin/pytest Tests/
 
   deploy:
     name: Despliegue en AWS con Zappa
