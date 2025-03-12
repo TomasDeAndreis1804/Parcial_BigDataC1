@@ -35,14 +35,16 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias y configurar entorno virtual
         run: |
-          pip install -r requirements.txt
-          pip install pytest boto3 beautifulsoup4
+          python -m venv venv
+          venv/bin/pip install --upgrade pip wheel
+          venv/bin/pip install "setuptools<58.0.0"
+          venv/bin/pip install -r requirements.txt
+          venv/bin/pip install pytest boto3 beautifulsoup4 "moto<5.0" awscli zappa
 
       - name: Ejecutar pruebas con pytest
-        run: PYTHONPATH=$(pwd) pytest Tests/
-
+        run: venv/bin/pytest
 
   deploy:
     name: Despliegue en AWS con Zappa
@@ -57,16 +59,35 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Instalar Zappa
-        run: pip install zappa
+      - name: Instalar dependencias y configurar entorno virtual
+        run: |
+          python -m venv venv
+          venv/bin/pip install --upgrade pip wheel
+          venv/bin/pip install "setuptools<58.0.0"
+          venv/bin/pip install -r requirements.txt
+          venv/bin/pip install boto3 beautifulsoup4 awscli zappa
 
-      - name: Configure AWS Credentials
+      - name: Configurar credenciales de AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-            aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Verificar conexión con AWS S3
+        run: venv/bin/aws s3 ls
 
       - name: Desplegar con Zappa
-        run: zappa update dev
+        run: |
+          cd Parsing
+          if venv/bin/zappa status dev_parser || true; then
+            venv/bin/zappa update dev_parser
+          else
+            venv/bin/zappa deploy dev_parser
+          fi
+
+      - name: Verificar estado del despliegue
+        run: |
+          cd Parsing
+          venv/bin/zappa status dev_parser
