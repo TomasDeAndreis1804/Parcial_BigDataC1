@@ -46,6 +46,11 @@ jobs:
       - name: Configurar PYTHONPATH
         run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
+      - name: Configurar credenciales de AWS (Mock)
+        run: |
+          echo "AWS_ACCESS_KEY_ID=fake_id" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=fake_secret" >> $GITHUB_ENV
+
       - name: Verificar estructura de archivos
         run: ls -R
 
