@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
+from moto import mock_s3
 from Parsing.parser import clean_price
 from Scrapping.scrapper import app
 
