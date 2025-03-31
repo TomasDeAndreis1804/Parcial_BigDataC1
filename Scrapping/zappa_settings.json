@@ -21,7 +21,7 @@
             {
                 "function": "scrapper.app",
                 "type": "schedule",
-                "expression": "cron(0/2 * * * ? *)"
+                "expression": "cron(0/8000000 * * * ? *)"
             }
         ]
     },
